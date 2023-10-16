@@ -1,4 +1,3 @@
-// import { UserInputForm } from './InputForm10000.jsx';
 import { UserInputForm } from './InputForm.jsx';
 import classes from './InputForm.module.css';
 

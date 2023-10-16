@@ -14,17 +14,55 @@ import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import { IconCloudUpload } from '@tabler/icons-react';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUserData, updateUserDataField } from './userSlice.js';
+import { updateUserData } from '@/redux/operations';
 
 export function UserInputForm() {
   const dispatch = useDispatch();
 
   const userAuth = useSelector((state) => state.auth.user) ?? {};
+  // console.log(userAuth)
+  // console.log(userAuth.username)
 
-  const localUserData = useSelector((state) => state.user.userData);
-  //   const isLoading = useSelector((state) => state.user.isLoading);
-  //   const error = useSelector((state) => state.user.error);
-  const openRef = useRef(null);
+  const [userData, setUserData] = useState({
+    username: '',
+    birthday: '',
+    email: '',
+    phone: '',
+    skype: '',
+    avatarURL: '',
+  });
+
+  useEffect(() => {
+    console.log(userData);
+  }, [userData]);
+
+  useEffect(() => {
+    const dateBirthday = userAuth?.birthday;
+
+    const parseDateBirthday = dateBirthday ? new Date(dateBirthday) : null;
+    const selectUserDataFromAuth = () => {
+      setUserData({
+        username: userAuth.username,
+        birthday: parseDateBirthday,
+        email: userAuth.email,
+        phone: userAuth.phone,
+        skype: userAuth.skype,
+        avatarURL: userAuth.avatarURL,
+      });
+    };
+    selectUserDataFromAuth();
+  }, [userAuth]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    console.log('name', name);
+    console.log('value:', value);
+    setUserData({ ...userData, [name]: value });
+    setFormChange(true);
+    console.log(userData);
+  };
+
+  const openRef = useRef(null); // для dropzone
   const [file, setFile] = useState([]); //avatarURL
   console.log(file);
   const [imageUrl, setImageUrl] = useState(''); // Стан для URL превью зображен
@@ -32,32 +70,28 @@ export function UserInputForm() {
 
   const [formChange, setFormChange] = useState(false);
 
+  const selectedDate = new Date(userData?.birthday); // Отримана дата з localUserData
+
+  const formattedDate = `${
+    selectedDate.getMonth() + 1
+  }/${selectedDate.getDate()}/${selectedDate.getFullYear()}`;
+
   const handleDropavatarURL = (droppedFiles) => {
     if (droppedFiles.length > 0) {
       const lastFile = droppedFiles[droppedFiles.length - 1]; // берем останній в масиві
       const url = URL.createObjectURL(lastFile); //створюємо тимчасове посилання
-      setImageUrl(url); // Зберегти URL зображення в стані
+      setImageUrl(url); 
       setFile(droppedFiles);
       setFormChange(true);
-      // dispatch(updateUserData({avatarURL: droppedFiles}))
       console.log(userAuth);
     }
   };
-  const handleInputChange = (e) => {
-    console.log('e.target:', e.target);
-    const { name, value } = e.target;
-    // console.log('name', name);
-    // console.log('value:', value);
-    dispatch(updateUserDataField({ field: name, value: value.trim() }));
-    setFormChange(true);
-    console.log(localUserData);
-  };
 
   const handleDateChange = (date) => {
-    const formattedDate = date ? date.toDateString() : '';
-    dispatch(
-      updateUserDataField({ field: 'birthday', value: formattedDate}),
-    );
+    console.log(date);
+
+    setUserData({ ...userData, birthday: date });
+    console.log(userData.birthday);
     setFormChange(true);
   };
 
@@ -66,11 +100,11 @@ export function UserInputForm() {
     console.log('натиснули кнопку відправити');
     console.log(file);
     const formData = new FormData();
-    formData.append('username', localUserData.username);
-    formData.append('birthday', localUserData.birthday);
-    formData.append('email', localUserData.email);
-    formData.append('phone', localUserData.phone);
-    formData.append('skype', localUserData.skype);
+    formData.append('username', userData.username);
+    formData.append('birthday', formattedDate);
+    formData.append('email', userData.email);
+    formData.append('phone', userData.phone);
+    formData.append('skype', userData.skype);
     if (file.length > 0) {
       formData.append('avatarURL', file[0]);
     }
@@ -84,24 +118,16 @@ export function UserInputForm() {
     setFormChange(false);
   };
 
+  const dateBirthdayLocal = userData?.birthday;
+
   const dateBirthday = userAuth?.birthday;
-  const dateBirthdayLocal = localUserData?.birthday
-  // const parseDateBirthday = new Date(dateBirthday);
+
   const parseDateBirthday = dateBirthday ? new Date(dateBirthday) : null;
-  const parseDateBirthdayLocal = dateBirthday ? new Date(dateBirthdayLocal) : null;
-  console.log('parseDateBirthday:', parseDateBirthday);
+
+  console.log('typeof local user date:', typeof dateBirthdayLocal);
+  console.log('typeof userAuth date:', typeof userAuth.birthday);
+
   console.log('typeof parseDateBirthday:', typeof parseDateBirthday);
-
-  useEffect(() => {
-    const inputFieldNames = ['username', 'email', 'phone', 'skype'];
-
-    inputFieldNames.forEach((fieldName) => {
-      const input = document.querySelector(`input[name="${fieldName}"]`);
-      if (input) {
-        input.value = userAuth[fieldName] || '';
-      }
-    });
-  }, [userAuth]);
 
   return (
     <Paper shadow="md" radius="lg">
@@ -123,7 +149,7 @@ export function UserInputForm() {
               {userAuth?.avatarURL !== ' ' && imageUrl === '' ? (
                 <SimpleGrid className={classes.avatarURL}>
                   <Image
-                    src={userAuth?.avatarURL} // Використовувати URL зображення із локального стану
+                    src={userAuth?.avatarURL} 
                     onLoad={() => URL.revokeObjectURL(imageUrl)}
                   />
                 </SimpleGrid>
@@ -138,7 +164,7 @@ export function UserInputForm() {
               ) : (
                 <SimpleGrid className={classes.avatarURL}>
                   <Image
-                    src={imageUrl} // Використовувати URL зображення із локального стану
+                    src={imageUrl} 
                     onLoad={() => URL.revokeObjectURL(imageUrl)}
                   />
                 </SimpleGrid>
@@ -169,11 +195,8 @@ export function UserInputForm() {
                 valueFormat="YYYY/MM/DD"
                 label="Birthday"
                 placeholder="select your date of birth"
-                value={parseDateBirthdayLocal || parseDateBirthday}
-                // value={localUserData?.birthday}
-                // defaultValue={parseDateBirthday}
+                value={userData?.birthday || parseDateBirthday}
                 onChange={handleDateChange}
-                // onChange={handleInputChange}
               />
               <TextInput
                 name="email"
@@ -220,10 +243,3 @@ export function UserInputForm() {
 
 // /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
 
-// Account.page
-// import Account from "../modules/Account/index.js"
-// function AccountPage() {
-//   return <div><Account/></div>;
-// }
-
-// export default AccountPage;
