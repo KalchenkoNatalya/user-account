@@ -1,12 +1,11 @@
-import { UserInputForm } from './InputForm';
-import { DropzoneButton } from './DropzoneButton';
+// import { UserInputForm } from './InputForm10000.jsx';
+import { UserInputForm } from './InputForm.jsx';
 import classes from './InputForm.module.css';
 
 function UserForm() {
   console.log('UserForm is working');
   return (
     <div className={classes.userWrapper}>
-      <DropzoneButton />
       <UserInputForm />
     </div>
   );
