@@ -1,4 +1,4 @@
-import  UserForm  from './components/UserForm/UserForm.jsx';
+import UserForm from './components/UserForm/UserForm.jsx';
 function Account() {
   return (
     <div>
